@@ -1,0 +1,110 @@
+version: "3.8"
+
+services:
+  namenode:
+    image: apache/hadoop:3
+    platform: linux/amd64
+    container_name: namenode
+    hostname: namenode
+    user: root
+    command: ["sh", "-c", "hdfs namenode -format -nonInteractive 2>/dev/null; hdfs namenode"]
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - ./data/nameNode:/opt/hadoop/data/nameNode
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    environment:
+      ENSURE_NAMENODE_DIR: "/opt/hadoop/data/nameNode"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9870 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - hadoop-network
+
+  datanode:
+    image: apache/hadoop:3
+    platform: linux/amd64
+    container_name: datanode
+    hostname: datanode
+    user: root
+    command: ["hdfs", "datanode"]
+    volumes:
+      - ./data/dataNode:/opt/hadoop/data/dataNode
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+
+  resourcemanager:
+    image: apache/hadoop:3
+    platform: linux/amd64
+    container_name: resourcemanager
+    hostname: resourcemanager
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+
+  nodemanager:
+    image: apache/hadoop:3
+    platform: linux/amd64
+    container_name: nodemanager
+    hostname: nodemanager
+    command: ["yarn", "nodemanager"]
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:
+      resourcemanager:
+        condition: service_started
+    networks:
+      - hadoop-network
+
+  historyserver:
+    image: apache/hadoop:3
+    platform: linux/amd64
+    container_name: historyserver
+    hostname: historyserver
+    command: ["mapred", "historyserver"]
+    ports:
+      - "19888:19888"
+    volumes:
+      - ./data/historyServer:/opt/hadoop/data/historyServer
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:
+      namenode:
+        condition: service_healthy
+      resourcemanager:
+        condition: service_started
+    networks:
+      - hadoop-network
+
+networks:
+  hadoop-network:
+    driver: bridge
