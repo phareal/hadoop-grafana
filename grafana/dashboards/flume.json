@@ -1,0 +1,548 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Monitoring Apache Flume → HDFS → MySQL — pipeline Big Data en temps réel",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Events Ingested",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null  },
+              { "color": "blue",   "value": 1000  },
+              { "color": "orange", "value": 10000 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/metrics",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "total_events", "text": "Total Events", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Events / sec",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "orange", "value": 5    },
+              { "color": "red",    "value": 20   }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/metrics",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "events_per_sec", "text": "Events/s", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "ERROR Count",
+      "description": "Passe en rouge au-dessus de 50 erreurs — effet alerte garanti",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "orange", "value": 10   },
+              { "color": "red",    "value": 50   }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/metrics",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "error_count", "text": "Erreurs", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Fichiers HDFS créés",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "#3274D9", "mode": "fixed" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [ { "color": "blue", "value": null } ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/metrics",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "hdfs_files", "text": "Fichiers HDFS", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Débit Flume en temps réel",
+      "gridPos": { "h": 9, "w": 14, "x": 0, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "#e6522c", "mode": "fixed" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "spanNulls": true,
+            "showPoints": "never",
+            "lineInterpolation": "smooth"
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/throughput",
+          "format": "timeseries",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "time",  "text": "Time",     "type": "timestamp_epoch_ms" },
+            { "selector": "value", "text": "Events/s", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 5,
+      "type": "piechart",
+      "title": "Distribution INFO / WARN / ERROR",
+      "gridPos": { "h": 9, "w": 10, "x": 14, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "INFO" },
+            "properties": [ { "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "WARN" },
+            "properties": [ { "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ERROR" },
+            "properties": [ { "id": "color", "value": { "fixedColor": "#F2495C", "mode": "fixed" } } ]
+          }
+        ]
+      },
+      "options": {
+        "displayLabels": ["name", "percent"],
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "pieType": "pie",
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/log-distribution",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "INFO",  "text": "INFO",  "type": "number" },
+            { "selector": "WARN",  "text": "WARN",  "type": "number" },
+            { "selector": "ERROR", "text": "ERROR", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Étudiants par filière",
+      "gridPos": { "h": 9, "w": 14, "x": 0, "y": 13 },
+      "datasource": { "type": "mysql", "uid": "mysql-hadoop" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "lineWidth": 0 },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "barRadius": 0.05,
+        "barWidth": 0.85,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": false },
+        "orientation": "vertical",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": -30,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "mysql", "uid": "mysql-hadoop" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT filiere, COUNT(*) AS etudiants FROM etudiants GROUP BY filiere ORDER BY etudiants DESC",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "id": 8,
+      "type": "gauge",
+      "title": "HDFS Storage Used",
+      "gridPos": { "h": 9, "w": 10, "x": 14, "y": 13 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1000,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "orange", "value": 500  },
+              { "color": "red",    "value": 800  }
+            ]
+          },
+          "unit": "decmbytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/metrics",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "hdfs_size_mb", "text": "HDFS MB", "type": "number" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    },
+
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Dernières inscriptions étudiants",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 22 },
+      "datasource": { "type": "mysql", "uid": "mysql-hadoop" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "note_finale" },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red",    "value": null },
+                    { "color": "orange", "value": 10   },
+                    { "color": "green",  "value": 14   }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [ { "displayName": "date_inscription", "desc": true } ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "mysql", "uid": "mysql-hadoop" },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT e.prenom, e.nom, c.nom_cours, i.note_finale, i.date_inscription FROM inscriptions i JOIN etudiants e ON i.etudiant_id = e.id JOIN cours c ON i.cours_id = c.id ORDER BY i.date_inscription DESC LIMIT 20",
+          "sql": { "columns": [], "groupBy": [], "limit": 50 }
+        }
+      ]
+    },
+
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Log Stream Flume — 50 derniers events",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 30 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Niveau" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "INFO":  { "color": "green",  "index": 0, "text": "INFO"  } } },
+                  { "type": "value", "options": { "WARN":  { "color": "orange", "index": 1, "text": "WARN"  } } },
+                  { "type": "value", "options": { "ERROR": { "color": "red",    "index": 2, "text": "ERROR" } } }
+                ]
+              },
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [ { "displayName": "Timestamp", "desc": true } ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "flume-api" },
+          "type": "json",
+          "source": "url",
+          "url": "http://dashboard:5000/api/logs",
+          "format": "table",
+          "parser": "default",
+          "url_options": { "method": "GET", "data": "" },
+          "root_selector": "",
+          "columns": [
+            { "selector": "time",    "text": "Timestamp", "type": "string" },
+            { "selector": "level",   "text": "Niveau",    "type": "string" },
+            { "selector": "message", "text": "Message",   "type": "string" }
+          ],
+          "filters": [],
+          "global_query_id": ""
+        }
+      ]
+    }
+
+  ],
+
+  "refresh": "1s",
+  "schemaVersion": 38,
+  "tags": ["hadoop", "flume", "hdfs", "bigdata"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Apache Flume — Hadoop Monitoring",
+  "uid": "flume-monitoring",
+  "version": 1,
+  "weekStart": ""
+}

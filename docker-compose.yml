@@ -1,6 +1,10 @@
 version: "3.8"
 
 services:
+
+  # ============================================================
+  # HADOOP CLUSTER
+  # ============================================================
   namenode:
     image: apache/hadoop:3
     platform: linux/amd64
@@ -104,6 +108,140 @@ services:
         condition: service_started
     networks:
       - hadoop-network
+
+  # ============================================================
+  # DATABASE
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: universite
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - hadoop-network
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+
+  # ============================================================
+  # PIPELINE FLUME
+  # ============================================================
+  log-generator:
+    build: ./log-generator
+    container_name: log-generator
+    hostname: log-generator
+    volumes:
+      - log-data:/var/log/flume/spool
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: universite
+      SPOOL_DIR: /var/log/flume/spool
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+    restart: on-failure
+
+  flume:
+    build: ./flume
+    platform: linux/amd64
+    container_name: flume
+    hostname: flume
+    volumes:
+      - log-data:/var/log/flume/spool
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+    restart: on-failure
+
+  # ============================================================
+  # DASHBOARD FLASK
+  # ============================================================
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    hostname: dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: universite
+      HDFS_URL: http://namenode:9870
+    depends_on:
+      mysql:
+        condition: service_healthy
+      namenode:
+        condition: service_healthy
+    networks:
+      - hadoop-network
+    restart: on-failure
+
+  # ============================================================
+  # GRAFANA  (image custom avec plugin Infinity pré-installé)
+  # ============================================================
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    container_name: grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=hadoop2026
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/flume.json
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_RENDERING_SERVER_URL=
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      mysql:
+        condition: service_healthy
+      dashboard:
+        condition: service_started
+    networks:
+      - hadoop-network
+
+# ============================================================
+# VOLUMES & NETWORK
+# ============================================================
+volumes:
+  mysql-data:
+  grafana-data:
+  log-data:
 
 networks:
   hadoop-network:

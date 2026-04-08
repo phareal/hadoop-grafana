@@ -1,0 +1,236 @@
+# =============================================================================
+# DOCKER
+# =============================================================================
+
+# Volumes et données persistées localement
+docker-volumes/
+.docker/
+
+# Logs Docker
+*.docker.log
+
+
+# =============================================================================
+# HADOOP / HDFS
+# =============================================================================
+
+# Données locales HDFS (namenode + datanode)
+data/
+
+# Logs des services Hadoop
+logs/
+
+# Fichiers temporaires Hadoop
+*.tmp
+*.pid
+hadoop-*.log
+hadoop-*.out
+
+
+# =============================================================================
+# GRAFANA
+# =============================================================================
+
+# Données runtime Grafana (base SQLite, sessions, plugins téléchargés)
+grafana/data/
+
+# NE PAS ignorer :
+# grafana/provisioning/  ← datasources, dashboards config
+# grafana/dashboards/    ← fichiers JSON des dashboards
+
+
+# =============================================================================
+# PYTHON / FLASK
+# =============================================================================
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# Tests et couverture
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# mypy / pyright
+.mypy_cache/
+.pytype/
+pyrightconfig.json
+
+
+# =============================================================================
+# MYSQL
+# =============================================================================
+
+# Données locales MySQL (montées via volume Docker)
+mysql/data/
+mysql/*.ibd
+mysql/*.frm
+mysql/auto.cnf
+mysql/ib_logfile*
+mysql/ibdata*
+mysql/#innodb_temp/
+
+# Dumps SQL locaux (déposer dans un dossier dédié versionné si nécessaire)
+*.sql.gz
+*.sql.bak
+
+
+# =============================================================================
+# FLUME
+# =============================================================================
+
+# Checkpoints et données de position (générés au runtime)
+flume/checkpoint/
+flume/data/
+
+# Logs Flume
+flume/logs/
+flume/*.log
+
+# NE PAS ignorer :
+# flume/flume.conf
+
+
+# =============================================================================
+# VARIABLES D'ENVIRONNEMENT ET SECRETS
+# =============================================================================
+
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Clés et certificats
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+*.truststore
+
+# Fichiers de credentials
+credentials.json
+secrets.json
+service-account*.json
+
+
+# =============================================================================
+# SYSTEME - macOS
+# =============================================================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+.AppleDB
+.AppleDesktop
+Icon
+Network Trash Folder
+Temporary Items
+
+
+# =============================================================================
+# SYSTEME - Windows
+# =============================================================================
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+
+# =============================================================================
+# SYSTEME - Linux
+# =============================================================================
+
+*~
+.nfs*
+.fuse_hidden*
+
+
+# =============================================================================
+# EDITEURS ET IDES
+# =============================================================================
+
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains (IntelliJ, PyCharm...)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+Session.vim
+.netrwhist
+
+# Emacs
+\#*\#
+.\#*
+
+
+# =============================================================================
+# LOGS GENERAUX
+# =============================================================================
+
+*.log
+*.log.*
+*.out
+*.err
+log/
+logs/
+
+
+# =============================================================================
+# FICHIERS TEMPORAIRES ET DIVERS
+# =============================================================================
+
+*.bak
+*.backup
+*.orig
+*.rej
+*.patch
+.cache/
+tmp/
+temp/
