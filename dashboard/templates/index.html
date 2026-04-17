@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Flume Dashboard — Groupe 6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #181b22;
+    --panel2: #1f232c;
+    --border: #2a2f3a;
+    --orange: #e6522c;
+    --blue: #3b82f6;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --green: #22c55e;
+    --text: #e5e7eb;
+    --muted: #8b95a7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--orange); color: #fff;
+    display: grid; place-items: center; font-weight: 700;
+  }
+  .brand { font-weight: 700; letter-spacing: 1px; color: #fff; }
+  .status-up { color: var(--green); font-weight: 600; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .clock { color: var(--muted); margin-left: auto; }
+  .ranges button {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px;
+    font-family: inherit; font-size: 12px; cursor: pointer; margin-left: 4px;
+  }
+  .ranges button.active, .ranges button:hover { color: var(--orange); border-color: var(--orange); }
+  .promql {
+    display: flex; gap: 8px; padding: 12px 18px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  .promql input {
+    flex: 1; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px 12px; font-family: inherit; font-size: 12px;
+  }
+  .promql input::placeholder { color: var(--muted); }
+  .promql .exec {
+    background: var(--orange); color: #fff; border: none;
+    padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;
+  }
+  .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; padding: 16px 18px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 14px;
+  }
+  .card .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .card .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .card.total .value { color: #fff; }
+  .card.info .value { color: var(--blue); }
+  .card.warn .value { color: var(--orange); }
+  .card.error .value { color: var(--red); }
+  .panels { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; padding: 0 18px 16px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 14px;
+  }
+  .panel h3 {
+    color: var(--muted); font-size: 11px; text-transform: uppercase;
+    margin-bottom: 10px; letter-spacing: 1px; font-weight: 600;
+  }
+  .panel h3 span { color: var(--orange); }
+  #chart { height: 240px; }
+  #donut { height: 240px; }
+  .logs-panel { grid-column: 1 / -1; }
+  .logs {
+    max-height: 320px; overflow-y: auto;
+    font-size: 12px; line-height: 1.7;
+  }
+  .logs .line { padding: 2px 6px; border-left: 3px solid transparent; }
+  .logs .line.INFO { border-color: var(--blue); color: #c7d4ea; }
+  .logs .line.WARN { border-color: var(--orange); color: #f0c090; }
+  .logs .line.ERROR { border-color: var(--red); color: #ffb3b3; }
+  .logs .ts { color: var(--muted); margin-right: 8px; }
+  .logs .lvl { display: inline-block; min-width: 52px; font-weight: 700; }
+  .sink-panel { grid-column: 1 / -1; }
+  .bars { display: flex; gap: 8px; align-items: flex-end; height: 120px; padding: 8px 0; }
+  .bar {
+    flex: 1; background: var(--orange); opacity: 0.85;
+    border-radius: 2px 2px 0 0; transition: height .3s ease;
+  }
+  .bar:hover { opacity: 1; }
+  .bar-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 4px; }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .panels { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">P</div>
+    <div class="brand">PROMETHEUS</div>
+    <div class="status-up"><span class="dot"></span>UP</div>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="ranges">
+      <button>5m</button>
+      <button class="active">15m</button>
+      <button>1h</button>
+      <button>6h</button>
+      <button>24h</button>
+    </div>
+  </div>
+
+  <div class="promql">
+    <input id="query" placeholder='flume_events_total{level="INFO"}' value="rate(flume_events_total[1m])" />
+    <button class="exec">Execute</button>
+  </div>
+
+  <div class="grid">
+    <div class="card total"><div class="label">Total Events</div><div class="value" id="m-total">0</div></div>
+    <div class="card info"><div class="label">INFO</div><div class="value" id="m-info">0</div></div>
+    <div class="card warn"><div class="label">WARN</div><div class="value" id="m-warn">0</div></div>
+    <div class="card error"><div class="label">ERROR</div><div class="value" id="m-error">0</div></div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h3>Events / sec <span id="rate">0</span> ev/s</h3>
+      <canvas id="chart"></canvas>
+    </div>
+    <div class="panel">
+      <h3>Distribution</h3>
+      <canvas id="donut"></canvas>
+    </div>
+    <div class="panel sink-panel">
+      <h3>HDFS Sink Metrics</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="panel logs-panel">
+      <h3>Log Stream <span id="uptime">uptime 0s</span></h3>
+      <div class="logs" id="logs"></div>
+    </div>
+  </div>
+
+<script>
+const socket = io();
+
+const fmt = n => n.toLocaleString("fr-FR");
+document.getElementById("clock").textContent = new Date().toLocaleTimeString();
+setInterval(() => { document.getElementById("clock").textContent = new Date().toLocaleTimeString(); }, 1000);
+
+const chart = new Chart(document.getElementById("chart"), {
+  type: "line",
+  data: { labels: [], datasets: [{
+    label: "events/s", data: [],
+    borderColor: "#e6522c", backgroundColor: "rgba(230,82,44,0.15)",
+    borderWidth: 2, tension: 0.35, fill: true, pointRadius: 0
+  }]},
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: "#8b95a7", font: { size: 10 } }, grid: { color: "#2a2f3a" } },
+      y: { ticks: { color: "#8b95a7" }, grid: { color: "#2a2f3a" }, beginAtZero: true }
+    }
+  }
+});
+
+const donut = new Chart(document.getElementById("donut"), {
+  type: "doughnut",
+  data: { labels: ["INFO","WARN","ERROR"], datasets: [{
+    data: [0,0,0],
+    backgroundColor: ["#3b82f6","#e6522c","#ef4444"], borderWidth: 0
+  }]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: "bottom", labels: { color: "#e5e7eb", font: { size: 11 } } } },
+    cutout: "65%"
+  }
+});
+
+socket.on("metrics", m => {
+  document.getElementById("m-total").textContent = fmt(m.total);
+  document.getElementById("m-info").textContent  = fmt(m.info);
+  document.getElementById("m-warn").textContent  = fmt(m.warn);
+  document.getElementById("m-error").textContent = fmt(m.error);
+  document.getElementById("rate").textContent = m.per_sec;
+  document.getElementById("uptime").textContent = "uptime " + m.uptime + "s";
+  donut.data.datasets[0].data = [m.info, m.warn, m.error];
+  donut.update("none");
+});
+
+socket.on("throughput", pts => {
+  chart.data.labels = pts.map(p => p.t);
+  chart.data.datasets[0].data = pts.map(p => p.v);
+  chart.update("none");
+
+  const bars = document.getElementById("bars");
+  const last = pts.slice(-20);
+  const max = Math.max(1, ...last.map(p => p.v));
+  bars.innerHTML = last.map(p =>
+    `<div class="bar" style="height:${(p.v/max)*100}%" title="${p.t}: ${p.v}"></div>`
+  ).join("");
+});
+
+socket.on("logs", arr => {
+  const el = document.getElementById("logs");
+  el.innerHTML = arr.slice().reverse().map(l =>
+    `<div class="line ${l.level}"><span class="ts">${l.ts}</span><span class="lvl">${l.level}</span>${escapeHtml(l.msg)}</div>`
+  ).join("");
+});
+
+function escapeHtml(s){return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+</script>
+</body>
+</html>
