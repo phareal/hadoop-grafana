@@ -1,0 +1,17 @@
+data/nameNode/
+data/dataNode/
+**/data/nameNode/
+**/data/dataNode/
+logs/
+*.log
+__pycache__/
+*.pyc
+.env
+venv/
+grafana/data/
+flume/checkpoint/
+volumes/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
