@@ -1,0 +1,214 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Events",
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "none",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/metrics",
+        "url_options": { "data": "", "method": "GET" },
+        "root_selector": "",
+        "columns": [{ "selector": "total", "text": "total", "type": "number" }]
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "Events/sec",
+      "id": 2,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "unit": "ops"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "auto" },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/metrics",
+        "url_options": { "data": "", "method": "GET" },
+        "columns": [{ "selector": "per_sec", "text": "per_sec", "type": "number" }]
+      }]
+    },
+    {
+      "type": "stat",
+      "title": "ERROR Count",
+      "id": 3,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "textMode": "auto" },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/metrics",
+        "url_options": { "data": "", "method": "GET" },
+        "columns": [{ "selector": "error", "text": "error", "type": "number" }]
+      }]
+    },
+    {
+      "type": "gauge",
+      "title": "HDFS Storage",
+      "id": 4,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "decmbytes",
+          "min": 0,
+          "max": 1000,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 500 },
+              { "color": "red", "value": 800 }
+            ]
+          }
+        }
+      },
+      "options": { "orientation": "auto", "showThresholdLabels": false, "showThresholdMarkers": true },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/metrics",
+        "url_options": { "data": "", "method": "GET" },
+        "columns": [{ "selector": "total", "text": "hdfs_mb", "type": "number" }]
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Débit Flume (events/s)",
+      "id": 5,
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#e6522c" },
+          "custom": { "lineWidth": 2, "fillOpacity": 20, "showPoints": "never" },
+          "unit": "ops"
+        }
+      },
+      "options": { "legend": { "displayMode": "hidden" }, "tooltip": { "mode": "single" } },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/throughput",
+        "url_options": { "data": "", "method": "GET" },
+        "root_selector": "",
+        "columns": [
+          { "selector": "t", "text": "time", "type": "string" },
+          { "selector": "v", "text": "events", "type": "number" }
+        ]
+      }]
+    },
+    {
+      "type": "piechart",
+      "title": "INFO / WARN / ERROR",
+      "id": 6,
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "info" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#3b82f6" } }] },
+          { "matcher": { "id": "byName", "options": "warn" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#e6522c" } }] },
+          { "matcher": { "id": "byName", "options": "error" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#ef4444" } }] }
+        ]
+      },
+      "options": { "pieType": "donut", "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/metrics",
+        "url_options": { "data": "", "method": "GET" },
+        "columns": [
+          { "selector": "info",  "text": "info",  "type": "number" },
+          { "selector": "warn",  "text": "warn",  "type": "number" },
+          { "selector": "error", "text": "error", "type": "number" }
+        ]
+      }]
+    },
+    {
+      "type": "logs",
+      "title": "Logs Flume",
+      "id": 7,
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 13 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Flume-API" },
+      "options": { "showTime": true, "showLabels": false, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [{
+        "refId": "A",
+        "type": "json",
+        "source": "url",
+        "url": "http://flume-dashboard:5000/api/logs",
+        "url_options": { "data": "", "method": "GET" },
+        "root_selector": "",
+        "columns": [
+          { "selector": "ts",    "text": "time",  "type": "string" },
+          { "selector": "level", "text": "level", "type": "string" },
+          { "selector": "msg",   "text": "message", "type": "string" }
+        ]
+      }]
+    }
+  ],
+  "refresh": "2s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["flume","hadoop","groupe6"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Flume — Groupe 6",
+  "uid": "flume-groupe6",
+  "version": 1,
+  "weekStart": ""
+}

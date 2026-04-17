@@ -1,0 +1,9 @@
+apiVersion: 1
+datasources:
+  - name: Flume-API
+    type: yesoreyeram-infinity-datasource
+    url: http://flume-dashboard:5000
+    isDefault: true
+    editable: true
+    jsonData:
+      tlsSkipVerify: true
