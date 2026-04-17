@@ -1,0 +1,33 @@
+{
+    auto_https off
+    http_port 80
+    log {
+        output discard
+    }
+}
+
+groupe6.127.0.0.1.nip.io {
+    root * /srv
+    file_server
+    encode gzip
+}
+
+namenode.127.0.0.1.nip.io {
+    reverse_proxy namenode:9870
+}
+
+yarn.127.0.0.1.nip.io {
+    reverse_proxy resourcemanager:8088
+}
+
+flume.127.0.0.1.nip.io {
+    reverse_proxy flume-dashboard:5000 {
+        header_up Host {host}
+        header_up Upgrade {http.request.header.Upgrade}
+        header_up Connection {http.request.header.Connection}
+    }
+}
+
+grafana.127.0.0.1.nip.io {
+    reverse_proxy grafana:3000
+}

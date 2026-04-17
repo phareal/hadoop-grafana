@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Groupe 6 — Hadoop Big Data</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000;
+    color: #d1d5db;
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    min-height: 100vh; padding: 40px 20px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  header { border-bottom: 1px solid #1f2937; padding-bottom: 20px; margin-bottom: 30px; }
+  .prompt { color: #22c55e; }
+  .brand { font-size: 28px; font-weight: 700; color: #fff; margin: 6px 0; }
+  .sub { color: #6b7280; font-size: 13px; }
+  .blink { animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    margin-top: 20px;
+  }
+  .card {
+    background: #0a0a0a; border: 1px solid #1f2937;
+    border-radius: 6px; padding: 18px; text-decoration: none;
+    color: inherit; transition: all .2s ease;
+    display: block;
+  }
+  .card:hover {
+    border-color: #22c55e; transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(34,197,94,0.15);
+  }
+  .card .arrow { color: #22c55e; margin-right: 6px; }
+  .card h3 { font-size: 15px; color: #fff; margin-bottom: 8px; }
+  .card p { font-size: 12px; color: #6b7280; line-height: 1.5; }
+  .card .url { color: #e6522c; font-size: 11px; margin-top: 8px; word-break: break-all; }
+  footer {
+    margin-top: 50px; padding-top: 20px;
+    border-top: 1px solid #1f2937; color: #4b5563; font-size: 12px;
+  }
+  .team { color: #22c55e; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><span class="prompt">groupe6@hadoop</span>:<span style="color:#3b82f6">~</span>$ <span class="blink">█</span></div>
+    <div class="brand">▚ Cluster Hadoop — Groupe 6</div>
+    <div class="sub">Big Data · Lomé Business School · 2026 · 9 services · &lt; 3GB RAM</div>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="http://namenode.127.0.0.1.nip.io">
+      <h3><span class="arrow">❯</span>NameNode HDFS</h3>
+      <p>Interface Web du NameNode Hadoop — gestion des fichiers, blocks, DataNodes.</p>
+      <div class="url">namenode.127.0.0.1.nip.io</div>
+    </a>
+    <a class="card" href="http://yarn.127.0.0.1.nip.io">
+      <h3><span class="arrow">❯</span>YARN ResourceManager</h3>
+      <p>Ordonnancement des jobs MapReduce, allocation CPU/RAM des containers.</p>
+      <div class="url">yarn.127.0.0.1.nip.io</div>
+    </a>
+    <a class="card" href="http://flume.127.0.0.1.nip.io">
+      <h3><span class="arrow">❯</span>Dashboard Flume</h3>
+      <p>Visualisation temps réel des logs étudiants ingérés par Flume → HDFS.</p>
+      <div class="url">flume.127.0.0.1.nip.io</div>
+    </a>
+    <a class="card" href="http://grafana.127.0.0.1.nip.io">
+      <h3><span class="arrow">❯</span>Grafana Monitoring</h3>
+      <p>Tableaux de bord d'observabilité avancés — débit, erreurs, distribution.</p>
+      <div class="url">grafana.127.0.0.1.nip.io</div>
+    </a>
+  </div>
+
+  <footer>
+    <div>// Architecture : HDFS + YARN + Flume + Flask + Grafana + Caddy</div>
+    <div class="team">// Équipe Groupe 6 — LAWSON-DJITO · POTCHONA · AMEDON</div>
+  </footer>
+</div>
+</body>
+</html>
