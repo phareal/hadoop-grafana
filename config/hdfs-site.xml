@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>/opt/hadoop/data/nameNode</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>/opt/hadoop/data/dataNode</value>
+  </property>
+  <property>
+    <name>dfs.datanode.handler.count</name>
+    <value>4</value>
+  </property>
+  <property>
+    <name>dfs.namenode.handler.count</name>
+    <value>4</value>
+  </property>
+</configuration>

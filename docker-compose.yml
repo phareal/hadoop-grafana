@@ -1,0 +1,186 @@
+version: "3.8"
+
+x-hadoop-common: &hadoop-common
+  image: apache/hadoop:3
+  platform: linux/arm64
+  # platform: linux/amd64  # 🪟 Windows WSL2
+  networks:
+    - hadoop-network
+  environment:
+    HADOOP_HEAPSIZE: 256
+    HADOOP_OPTS: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+services:
+
+  namenode:
+    <<: *hadoop-common
+    container_name: namenode
+    hostname: namenode
+    mem_limit: 512m
+    memswap_limit: 512m
+    environment:
+      HADOOP_HEAPSIZE: 256
+      HADOOP_OPTS: "-Xmx256m -Xms128m -XX:+UseG1GC"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ./config/mapred-site.xml:/opt/hadoop/etc/hadoop/mapred-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+      - hadoop_namenode:/opt/hadoop/data/nameNode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    command: ["hdfs", "namenode"]
+
+  datanode:
+    <<: *hadoop-common
+    container_name: datanode
+    mem_limit: 384m
+    memswap_limit: 384m
+    environment:
+      HADOOP_HEAPSIZE: 192
+      HADOOP_OPTS: "-Xmx192m -Xms96m -XX:+UseG1GC"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - hadoop_datanode:/opt/hadoop/data/dataNode
+    depends_on:
+      - namenode
+    command: ["hdfs", "datanode"]
+
+  resourcemanager:
+    <<: *hadoop-common
+    container_name: resourcemanager
+    mem_limit: 256m
+    memswap_limit: 256m
+    environment:
+      HADOOP_HEAPSIZE: 192
+      HADOOP_OPTS: "-Xmx192m -Xms96m -XX:+UseG1GC"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    ports:
+      - "8088:8088"
+    depends_on:
+      - namenode
+    command: ["yarn", "resourcemanager"]
+
+  nodemanager:
+    <<: *hadoop-common
+    container_name: nodemanager
+    mem_limit: 384m
+    memswap_limit: 384m
+    environment:
+      HADOOP_HEAPSIZE: 192
+      HADOOP_OPTS: "-Xmx192m -Xms96m -XX:+UseG1GC"
+    volumes:
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ./config/yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
+    depends_on:
+      - resourcemanager
+    command: ["yarn", "nodemanager"]
+
+  flume:
+    build: ./flume
+    container_name: flume
+    platform: linux/arm64
+    # platform: linux/amd64
+    mem_limit: 192m
+    memswap_limit: 192m
+    networks:
+      - hadoop-network
+    ports:
+      - "44444:44444"
+    depends_on:
+      - namenode
+    environment:
+      JAVA_OPTS: "-Xmx128m -Xms64m -XX:+UseG1GC"
+
+  log-generator:
+    build: ./log-generator
+    container_name: log-generator
+    platform: linux/arm64
+    # platform: linux/amd64
+    mem_limit: 64m
+    memswap_limit: 64m
+    networks:
+      - hadoop-network
+    depends_on:
+      - flume
+
+  dashboard:
+    build: ./dashboard
+    container_name: flume-dashboard
+    platform: linux/arm64
+    # platform: linux/amd64
+    mem_limit: 128m
+    memswap_limit: 128m
+    networks:
+      - hadoop-network
+    ports:
+      - "5000:5000"
+    depends_on:
+      - flume
+    environment:
+      FLASK_ENV: production
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    platform: linux/arm64
+    # platform: linux/amd64
+    mem_limit: 256m
+    memswap_limit: 256m
+    networks:
+      - hadoop-network
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: hadoop2026
+      GF_INSTALL_PLUGINS: grafana-infinity-datasource
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ALERTING_ENABLED: "false"
+      GF_EXPLORE_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/flume.json
+      GF_DATABASE_WAL: "true"
+      GF_DATABASE_CACHE_MODE: "shared"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - dashboard
+
+  caddy:
+    image: caddy:alpine
+    container_name: groupe6-caddy
+    platform: linux/arm64
+    # platform: linux/amd64
+    mem_limit: 64m
+    memswap_limit: 64m
+    networks:
+      - hadoop-network
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/index.html:/srv/index.html:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - namenode
+      - dashboard
+      - grafana
+
+networks:
+  hadoop-network:
+    driver: bridge
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  grafana_data:
+  caddy_data:
+  caddy_config:
