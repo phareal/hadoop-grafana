@@ -27,7 +27,7 @@ ram() {
   echo -e "${B}RAM par conteneur :${NC}"
   docker stats --no-stream --format "  {{.Name}}: {{.MemUsage}}" \
     namenode datanode resourcemanager nodemanager \
-    flume log-generator flume-dashboard grafana groupe6-caddy 2>/dev/null
+    flume flume-dashboard crud-app grafana groupe6-caddy 2>/dev/null
 }
 
 echo -e "\n${B}=====================================${NC}"
@@ -40,8 +40,8 @@ container "DataNode"        "datanode"
 container "ResourceManager" "resourcemanager"
 container "NodeManager"     "nodemanager"
 container "Flume"           "flume"
-container "Log Generator"   "log-generator"
 container "Dashboard"       "flume-dashboard"
+container "CRUD App"        "crud-app"
 container "Grafana"         "grafana"
 container "Caddy"           "groupe6-caddy"
 

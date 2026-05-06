@@ -4,5 +4,5 @@ COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 COPY server.js ./
 COPY public ./public
-EXPOSE 5000 5050
+EXPOSE 4000
 CMD ["node", "server.js"]

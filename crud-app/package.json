@@ -1,0 +1,12 @@
+{
+  "name": "crud-app",
+  "version": "1.0.0",
+  "description": "Mini CRUD étudiants — chaque opération génère un log Flume",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}

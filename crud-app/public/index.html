@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Gestion de Stocks — Test logs Flume</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+    --info: #3fb950; --warn: #d29922; --error: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--bg); color: var(--text); margin: 0; padding: 16px;
+  }
+  h1 { font-size: 18px; margin: 0 0 12px; color: var(--accent); }
+  h2 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 14px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  label { font-size: 11px; color: var(--muted); min-width: 80px; }
+  input, select, textarea {
+    background: #0d1117; color: var(--text); border: 1px solid var(--border);
+    padding: 6px 8px; font: inherit; font-size: 12px; border-radius: 4px; flex: 1; min-width: 100px;
+  }
+  button {
+    background: #21262d; color: var(--text); border: 1px solid var(--border);
+    padding: 6px 14px; font: inherit; font-size: 12px; cursor: pointer; border-radius: 4px;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { border-color: var(--info); color: var(--info); }
+  button.danger { border-color: var(--error); color: var(--error); }
+  button.warn { border-color: var(--warn); color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: normal; text-transform: uppercase; font-size: 10px; }
+  tr:hover { background: rgba(88,166,255,0.05); }
+  .actions-cell button { padding: 2px 7px; font-size: 11px; }
+  .status { font-size: 11px; color: var(--muted); margin-top: 8px; min-height: 16px; }
+  .status.err { color: var(--error); }
+  .status.ok { color: var(--info); }
+  nav {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 12px; margin-bottom: 12px;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  }
+  nav .brand { color: var(--accent); font-weight: bold; margin-right: auto; }
+  nav a, nav .who {
+    color: var(--text); text-decoration: none; font-size: 12px;
+    padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px;
+  }
+  nav a:hover { border-color: var(--accent); color: var(--accent); }
+  nav .who { color: var(--info); border-color: var(--info); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab {
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 8px 14px; font-size: 12px; cursor: pointer; border-radius: 4px 4px 0 0;
+    color: var(--muted);
+  }
+  .tab.active { background: var(--bg); border-bottom-color: var(--bg); color: var(--accent); border-top: 2px solid var(--accent); }
+  .tab.hidden { display: none; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); padding: 12px; border-radius: 6px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: bold; color: var(--accent); }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+  .login-box { max-width: 380px; margin: 60px auto; }
+  .badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: bold;
+  }
+  .badge.admin { background: rgba(248,81,73,0.15); color: var(--error); }
+  .badge.manager { background: rgba(210,153,34,0.15); color: var(--warn); }
+  .badge.employee { background: rgba(63,185,80,0.15); color: var(--info); }
+  .badge.IN { background: rgba(63,185,80,0.15); color: var(--info); }
+  .badge.OUT { background: rgba(248,81,73,0.15); color: var(--error); }
+  .low-stock { color: var(--error); font-weight: bold; }
+  .seed-info { font-size: 11px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+  .seed-info code { background: #0d1117; padding: 1px 4px; border-radius: 3px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Vue Login -->
+<div id="view-login" class="view active">
+  <div class="panel login-box">
+    <h1>▚ Connexion — Gestion Stocks</h1>
+    <div class="row"><label>Utilisateur</label><input id="login-username" placeholder="admin" /></div>
+    <div class="row"><label>Mot de passe</label><input id="login-password" type="password" placeholder="admin123" /></div>
+    <div class="row" style="margin-top:8px">
+      <button class="primary" style="flex:1" onclick="doLogin()">Se connecter</button>
+    </div>
+    <div class="status" id="login-status"></div>
+    <div class="seed-info">
+      Comptes de test :<br/>
+      • <code>admin / admin123</code> — accès total<br/>
+      • <code>manager / manager123</code> — produits + stocks + fournisseurs<br/>
+      • <code>employee / employee123</code> — mouvements stocks seulement
+    </div>
+  </div>
+</div>
+
+<!-- Vue App -->
+<div id="view-app" class="view">
+
+  <nav>
+    <span class="brand">▚ Gestion Stocks — Groupe 6</span>
+    <span class="who" id="who"></span>
+    <a href="http://groupe6.127.0.0.1.nip.io">Console Flume</a>
+    <a href="http://namenode.127.0.0.1.nip.io">HDFS</a>
+    <a href="http://grafana.127.0.0.1.nip.io">Grafana</a>
+    <a href="#" onclick="doLogout(); return false">Déconnexion</a>
+  </nav>
+
+  <div class="tabs">
+    <div class="tab active" data-view="dashboard">Tableau de bord</div>
+    <div class="tab" data-view="products">Produits</div>
+    <div class="tab" data-view="movements">Mouvements stock</div>
+    <div class="tab hidden" data-view="suppliers" data-roles="admin,manager">Fournisseurs</div>
+    <div class="tab hidden" data-view="users" data-roles="admin">Utilisateurs</div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="t-dashboard" class="view active">
+    <div class="stats">
+      <div class="stat"><div class="v" id="d-products">0</div><div class="l">Produits</div></div>
+      <div class="stat"><div class="v" id="d-qty">0</div><div class="l">Unités stock</div></div>
+      <div class="stat"><div class="v" id="d-value">0</div><div class="l">Valeur (FCFA)</div></div>
+      <div class="stat"><div class="v" id="d-low" style="color:var(--error)">0</div><div class="l">Stock faible</div></div>
+      <div class="stat"><div class="v" id="d-mvts">0</div><div class="l">Mouvements</div></div>
+      <div class="stat"><div class="v" id="d-users">0</div><div class="l">Utilisateurs</div></div>
+    </div>
+  </div>
+
+  <!-- Produits -->
+  <div id="t-products" class="view">
+    <div class="panel" id="prod-form-panel">
+      <h2 id="prod-form-title">Nouveau produit</h2>
+      <input type="hidden" id="p-id" />
+      <div class="row"><label>Nom</label><input id="p-name" /></div>
+      <div class="row"><label>SKU</label><input id="p-sku" /></div>
+      <div class="row"><label>Catégorie</label><select id="p-category"></select></div>
+      <div class="row"><label>Fournisseur</label><select id="p-supplier"></select></div>
+      <div class="row"><label>Prix (FCFA)</label><input id="p-price" type="number" min="0" /></div>
+      <div class="row"><label>Quantité</label><input id="p-quantity" type="number" min="0" /></div>
+      <div class="row" style="margin-top:8px">
+        <button class="primary" onclick="saveProduct()">Enregistrer</button>
+        <button onclick="resetProduct()">Réinitialiser</button>
+      </div>
+      <div class="status" id="prod-status"></div>
+    </div>
+    <div class="panel">
+      <h2>Liste produits — <span id="prod-count">0</span> <button style="float:right" onclick="loadProducts()">↻</button></h2>
+      <table>
+        <thead><tr><th>ID</th><th>SKU</th><th>Nom</th><th>Catégorie</th><th>Fournisseur</th><th>Prix</th><th>Qté</th><th></th></tr></thead>
+        <tbody id="prod-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mouvements -->
+  <div id="t-movements" class="view">
+    <div class="panel">
+      <h2>Nouveau mouvement</h2>
+      <div class="row"><label>Produit</label><select id="m-product"></select></div>
+      <div class="row"><label>Type</label>
+        <select id="m-type"><option value="IN">Entrée (IN)</option><option value="OUT">Sortie (OUT)</option></select>
+      </div>
+      <div class="row"><label>Quantité</label><input id="m-qty" type="number" min="1" value="1" /></div>
+      <div class="row"><label>Raison</label><input id="m-reason" placeholder="livraison fournisseur, vente..." /></div>
+      <div class="row" style="margin-top:8px">
+        <button class="primary" onclick="saveMovement()">Enregistrer mouvement</button>
+      </div>
+      <div class="status" id="mvt-status"></div>
+    </div>
+    <div class="panel">
+      <h2>Historique <button style="float:right" onclick="loadMovements()">↻</button></h2>
+      <table>
+        <thead><tr><th>ID</th><th>Date</th><th>Produit</th><th>Type</th><th>Qté</th><th>Raison</th><th>Par</th></tr></thead>
+        <tbody id="mvt-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Fournisseurs -->
+  <div id="t-suppliers" class="view">
+    <div class="panel">
+      <h2>Nouveau fournisseur</h2>
+      <div class="row"><label>Nom</label><input id="s-name" /></div>
+      <div class="row"><label>Contact</label><input id="s-contact" /></div>
+      <div class="row" style="margin-top:8px"><button class="primary" onclick="saveSupplier()">Ajouter</button></div>
+      <div class="status" id="sup-status"></div>
+    </div>
+    <div class="panel">
+      <h2>Liste <button style="float:right" onclick="loadSuppliers()">↻</button></h2>
+      <table><thead><tr><th>ID</th><th>Nom</th><th>Contact</th></tr></thead><tbody id="sup-rows"></tbody></table>
+    </div>
+  </div>
+
+  <!-- Utilisateurs -->
+  <div id="t-users" class="view">
+    <div class="panel">
+      <h2>Nouvel utilisateur</h2>
+      <div class="row"><label>Username</label><input id="u-username" /></div>
+      <div class="row"><label>Mot de passe</label><input id="u-password" type="text" /></div>
+      <div class="row"><label>Nom</label><input id="u-name" /></div>
+      <div class="row"><label>Rôle</label><select id="u-role"><option>admin</option><option>manager</option><option>employee</option></select></div>
+      <div class="row" style="margin-top:8px"><button class="primary" onclick="saveUser()">Créer</button></div>
+      <div class="status" id="usr-status"></div>
+    </div>
+    <div class="panel">
+      <h2>Liste <button style="float:right" onclick="loadUsers()">↻</button></h2>
+      <table><thead><tr><th>ID</th><th>Username</th><th>Nom</th><th>Rôle</th><th></th></tr></thead><tbody id="usr-rows"></tbody></table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let TOKEN = localStorage.getItem('stock_token') || '';
+let ME = null;
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (TOKEN) opts.headers.Authorization = 'Bearer ' + TOKEN;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.errors?.join(',') || `HTTP ${res.status}`);
+  return data;
+}
+
+function setStatus(id, msg, kind = '') {
+  const el = $(id); if (!el) return;
+  el.textContent = msg; el.className = 'status ' + kind;
+}
+
+async function doLogin() {
+  const username = $('login-username').value.trim();
+  const password = $('login-password').value;
+  if (!username || !password) { setStatus('login-status', 'Champs requis', 'err'); return; }
+  try {
+    const r = await api('POST', '/api/auth/login', { username, password });
+    TOKEN = r.token;
+    ME = r.user;
+    localStorage.setItem('stock_token', TOKEN);
+    setStatus('login-status', '✓ Connecté', 'ok');
+    showApp();
+  } catch (e) {
+    setStatus('login-status', e.message, 'err');
+  }
+}
+
+async function doLogout() {
+  try { await api('POST', '/api/auth/logout'); } catch {}
+  TOKEN = ''; ME = null;
+  localStorage.removeItem('stock_token');
+  $('view-login').classList.add('active');
+  $('view-app').classList.remove('active');
+  $('login-username').value = ''; $('login-password').value = '';
+}
+
+function showApp() {
+  $('view-login').classList.remove('active');
+  $('view-app').classList.add('active');
+  $('who').textContent = `${ME.username} · ${ME.role}`;
+  document.querySelectorAll('.tab[data-roles]').forEach((t) => {
+    const allowed = t.dataset.roles.split(',');
+    t.classList.toggle('hidden', !allowed.includes(ME.role));
+  });
+  switchTab('dashboard');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.view === name));
+  document.querySelectorAll('#view-app > .view').forEach((v) => v.classList.toggle('active', v.id === 't-' + name));
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'products') { loadProducts(); loadCatSup(); }
+  if (name === 'movements') { loadMovements(); loadProductsForMvt(); }
+  if (name === 'suppliers') loadSuppliers();
+  if (name === 'users') loadUsers();
+}
+
+document.querySelectorAll('.tab').forEach((t) => t.onclick = () => switchTab(t.dataset.view));
+
+// Dashboard
+async function loadDashboard() {
+  try {
+    const d = await api('GET', '/api/dashboard');
+    $('d-products').textContent = d.products;
+    $('d-qty').textContent = d.totalQuantity;
+    $('d-value').textContent = d.totalValue.toLocaleString('fr-FR');
+    $('d-low').textContent = d.lowStock;
+    $('d-mvts').textContent = d.movements;
+    $('d-users').textContent = d.users;
+  } catch (e) { console.error(e); }
+}
+
+// Products
+async function loadCatSup() {
+  try {
+    const cats = await api('GET', '/api/categories');
+    $('p-category').innerHTML = cats.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    if (ME.role !== 'employee') {
+      const sups = await api('GET', '/api/suppliers').catch(() => []);
+      $('p-supplier').innerHTML = sups.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function loadProducts() {
+  try {
+    const data = await api('GET', '/api/products');
+    $('prod-count').textContent = data.length;
+    $('prod-rows').innerHTML = data.map((p) => `
+      <tr>
+        <td>${p.id}</td><td>${esc(p.sku)}</td><td>${esc(p.name)}</td>
+        <td>${esc(p.category)}</td><td>${esc(p.supplier)}</td>
+        <td>${p.price.toLocaleString('fr-FR')}</td>
+        <td class="${p.quantity < 5 ? 'low-stock' : ''}">${p.quantity}</td>
+        <td class="actions-cell">
+          ${canEditProducts() ? `<button class="warn" onclick="editProduct(${p.id})">Édit.</button>` : ''}
+          ${ME.role === 'admin' ? `<button class="danger" onclick="deleteProduct(${p.id})">×</button>` : ''}
+        </td>
+      </tr>`).join('');
+  } catch (e) { setStatus('prod-status', e.message, 'err'); }
+}
+
+function canEditProducts() { return ['admin','manager'].includes(ME.role); }
+
+async function saveProduct() {
+  const id = $('p-id').value;
+  const body = {
+    name: $('p-name').value.trim(),
+    sku: $('p-sku').value.trim(),
+    categoryId: parseInt($('p-category').value, 10),
+    supplierId: parseInt($('p-supplier').value, 10),
+    price: parseFloat($('p-price').value) || 0,
+    quantity: parseInt($('p-quantity').value, 10) || 0,
+  };
+  try {
+    if (id) await api('PUT', `/api/products/${id}`, body);
+    else await api('POST', '/api/products', body);
+    setStatus('prod-status', '✓ Enregistré', 'ok');
+    resetProduct(); loadProducts(); loadDashboard();
+  } catch (e) { setStatus('prod-status', e.message, 'err'); }
+}
+
+async function editProduct(id) {
+  const p = (await api('GET', '/api/products')).find((x) => x.id === id);
+  if (!p) return;
+  $('p-id').value = p.id;
+  $('p-name').value = p.name;
+  $('p-sku').value = p.sku;
+  $('p-category').value = p.categoryId;
+  $('p-supplier').value = p.supplierId;
+  $('p-price').value = p.price;
+  $('p-quantity').value = p.quantity;
+  $('prod-form-title').textContent = `Éditer #${p.id}`;
+}
+
+async function deleteProduct(id) {
+  if (!confirm(`Supprimer produit #${id} ?`)) return;
+  try { await api('DELETE', `/api/products/${id}`); loadProducts(); loadDashboard(); }
+  catch (e) { setStatus('prod-status', e.message, 'err'); }
+}
+
+function resetProduct() {
+  $('p-id').value = ''; $('p-name').value = ''; $('p-sku').value = '';
+  $('p-price').value = ''; $('p-quantity').value = '';
+  $('prod-form-title').textContent = 'Nouveau produit';
+}
+
+// Movements
+async function loadProductsForMvt() {
+  const data = await api('GET', '/api/products').catch(() => []);
+  $('m-product').innerHTML = data.map((p) => `<option value="${p.id}">${esc(p.sku)} — ${esc(p.name)} (stock: ${p.quantity})</option>`).join('');
+}
+
+async function loadMovements() {
+  try {
+    const data = await api('GET', '/api/movements');
+    $('mvt-rows').innerHTML = data.map((m) => `
+      <tr>
+        <td>${m.id}</td><td>${m.createdAt.slice(0, 19).replace('T', ' ')}</td>
+        <td>${esc(m.product)}</td>
+        <td><span class="badge ${m.type}">${m.type}</span></td>
+        <td>${m.qty}</td><td>${esc(m.reason)}</td><td>${esc(m.user)}</td>
+      </tr>`).join('');
+  } catch (e) { setStatus('mvt-status', e.message, 'err'); }
+}
+
+async function saveMovement() {
+  const body = {
+    productId: parseInt($('m-product').value, 10),
+    type: $('m-type').value,
+    qty: parseInt($('m-qty').value, 10),
+    reason: $('m-reason').value.trim(),
+  };
+  try {
+    await api('POST', '/api/movements', body);
+    setStatus('mvt-status', `✓ Mouvement ${body.type} enregistré`, 'ok');
+    $('m-reason').value = '';
+    loadMovements(); loadProductsForMvt(); loadDashboard();
+  } catch (e) { setStatus('mvt-status', e.message, 'err'); }
+}
+
+// Suppliers
+async function loadSuppliers() {
+  try {
+    const data = await api('GET', '/api/suppliers');
+    $('sup-rows').innerHTML = data.map((s) => `<tr><td>${s.id}</td><td>${esc(s.name)}</td><td>${esc(s.contact)}</td></tr>`).join('');
+  } catch (e) { setStatus('sup-status', e.message, 'err'); }
+}
+
+async function saveSupplier() {
+  try {
+    await api('POST', '/api/suppliers', { name: $('s-name').value.trim(), contact: $('s-contact').value.trim() });
+    setStatus('sup-status', '✓ Ajouté', 'ok');
+    $('s-name').value = ''; $('s-contact').value = '';
+    loadSuppliers();
+  } catch (e) { setStatus('sup-status', e.message, 'err'); }
+}
+
+// Users
+async function loadUsers() {
+  try {
+    const data = await api('GET', '/api/users');
+    $('usr-rows').innerHTML = data.map((u) => `
+      <tr>
+        <td>${u.id}</td><td>${esc(u.username)}</td><td>${esc(u.name)}</td>
+        <td><span class="badge ${u.role}">${u.role}</span></td>
+        <td>${u.id !== ME.id ? `<button class="danger" onclick="deleteUser(${u.id})">×</button>` : ''}</td>
+      </tr>`).join('');
+  } catch (e) { setStatus('usr-status', e.message, 'err'); }
+}
+
+async function saveUser() {
+  try {
+    await api('POST', '/api/users', {
+      username: $('u-username').value.trim(),
+      password: $('u-password').value,
+      name: $('u-name').value.trim(),
+      role: $('u-role').value,
+    });
+    setStatus('usr-status', '✓ Créé', 'ok');
+    $('u-username').value = ''; $('u-password').value = ''; $('u-name').value = '';
+    loadUsers();
+  } catch (e) { setStatus('usr-status', e.message, 'err'); }
+}
+
+async function deleteUser(id) {
+  if (!confirm(`Supprimer utilisateur #${id} ?`)) return;
+  try { await api('DELETE', `/api/users/${id}`); loadUsers(); loadDashboard(); }
+  catch (e) { setStatus('usr-status', e.message, 'err'); }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// Auto-restore session si token présent
+(async () => {
+  if (!TOKEN) return;
+  try {
+    ME = await api('GET', '/api/auth/me');
+    showApp();
+  } catch {
+    TOKEN = '';
+    localStorage.removeItem('stock_token');
+  }
+})();
+</script>
+</body>
+</html>

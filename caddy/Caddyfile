@@ -6,21 +6,24 @@
     }
 }
 
-groupe6.127.0.0.1.nip.io {
-    root * /srv
-    file_server
+http://groupe6.127.0.0.1.nip.io {
+    reverse_proxy flume-dashboard:5000 {
+        header_up Host {host}
+        header_up Upgrade {http.request.header.Upgrade}
+        header_up Connection {http.request.header.Connection}
+    }
     encode gzip
 }
 
-namenode.127.0.0.1.nip.io {
+http://namenode.127.0.0.1.nip.io {
     reverse_proxy namenode:9870
 }
 
-yarn.127.0.0.1.nip.io {
+http://yarn.127.0.0.1.nip.io {
     reverse_proxy resourcemanager:8088
 }
 
-flume.127.0.0.1.nip.io {
+http://flume.127.0.0.1.nip.io {
     reverse_proxy flume-dashboard:5000 {
         header_up Host {host}
         header_up Upgrade {http.request.header.Upgrade}
@@ -28,6 +31,10 @@ flume.127.0.0.1.nip.io {
     }
 }
 
-grafana.127.0.0.1.nip.io {
+http://grafana.127.0.0.1.nip.io {
     reverse_proxy grafana:3000
+}
+
+http://crud.127.0.0.1.nip.io {
+    reverse_proxy crud-app:4000
 }
